@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Credit Card Fraud Risk Simulator | Mahidhar Gubbala</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
+
+  :root {
+    --bg: #0a0a0f;
+    --surface: #14141c;
+    --surface-2: #1c1c28;
+    --border: #2a2a38;
+    --text-primary: #f4f4f6;
+    --text-secondary: #9a9ab0;
+    --text-muted: #6b6b82;
+    --accent-red: #ef4444;
+    --accent-amber: #f59e0b;
+    --accent-green: #22c55e;
+    --accent-blue: #3b82f6;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text-primary);
+    font-family: 'Inter', sans-serif;
+    line-height: 1.6;
+    min-height: 100vh;
+  }
+
+  .wrap {
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 56px 24px 80px;
+  }
+
+  header {
+    margin-bottom: 40px;
+  }
+
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(239,68,68,0.1);
+    border: 1px solid rgba(239,68,68,0.3);
+    color: #fca5a5;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 6px 14px;
+    border-radius: 30px;
+    margin-bottom: 20px;
+  }
+  .badge::before {
+    content: '';
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--accent-red);
+  }
+
+  h1 {
+    font-size: 32px;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    margin-bottom: 12px;
+  }
+
+  .lead {
+    color: var(--text-secondary);
+    font-size: 15.5px;
+    max-width: 560px;
+  }
+
+  .disclaimer {
+    margin-top: 16px;
+    font-size: 13px;
+    color: var(--text-muted);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 12px 16px;
+  }
+  .disclaimer b { color: var(--text-secondary); }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 28px;
+    margin-bottom: 24px;
+  }
+
+  .card h2 {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin-bottom: 20px;
+  }
+
+  .grid-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 20px;
+  }
+
+  label {
+    display: block;
+    font-size: 13.5px;
+    color: var(--text-secondary);
+    margin-bottom: 8px;
+    font-weight: 500;
+  }
+
+  input[type="number"], select {
+    width: 100%;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    color: var(--text-primary);
+    padding: 10px 12px;
+    border-radius: 8px;
+    font-size: 14.5px;
+    font-family: 'Inter', sans-serif;
+  }
+  input[type="number"]:focus, select:focus {
+    outline: none;
+    border-color: var(--accent-blue);
+  }
+
+  input[type="range"] {
+    width: 100%;
+    accent-color: var(--accent-blue);
+    margin-top: 4px;
+  }
+
+  .range-out {
+    font-size: 12.5px;
+    color: var(--text-muted);
+    margin-top: 4px;
+  }
+
+  button {
+    width: 100%;
+    background: var(--accent-blue);
+    color: white;
+    border: none;
+    padding: 13px 20px;
+    border-radius: 10px;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: opacity 0.15s ease;
+    font-family: 'Inter', sans-serif;
+  }
+  button:hover { opacity: 0.88; }
+  button:active { transform: scale(0.99); }
+
+  #result {
+    display: none;
+    margin-top: 20px;
+    background: var(--surface-2);
+    border-radius: 12px;
+    padding: 20px;
+  }
+
+  .result-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+  }
+
+  .score-label {
+    font-size: 13px;
+    color: var(--text-secondary);
+  }
+
+  .score-value {
+    font-size: 36px;
+    font-weight: 800;
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  .verdict {
+    font-size: 13px;
+    font-weight: 600;
+    padding: 6px 14px;
+    border-radius: 20px;
+  }
+
+  .bar-track {
+    height: 8px;
+    background: var(--bg);
+    border-radius: 4px;
+    overflow: hidden;
+    margin-bottom: 18px;
+  }
+  .bar-fill {
+    height: 100%;
+    border-radius: 4px;
+    width: 0%;
+    transition: width 0.5s ease;
+  }
+
+  .signal {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    font-size: 13.5px;
+    color: var(--text-secondary);
+    margin-bottom: 8px;
+  }
+  .signal:last-child { margin-bottom: 0; }
+  .signal-icon { font-size: 13px; margin-top: 1px; }
+  .signal-icon.up { color: var(--accent-red); }
+  .signal-icon.down { color: var(--accent-green); }
+
+  .stats-row {
+    display: flex;
+    gap: 24px;
+    margin-top: 28px;
+    padding-top: 20px;
+    border-top: 1px solid var(--border);
+    flex-wrap: wrap;
+  }
+  .stat {
+    font-size: 12.5px;
+    color: var(--text-muted);
+  }
+  .stat b {
+    color: var(--text-primary);
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  footer {
+    margin-top: 40px;
+    text-align: center;
+    font-size: 13px;
+    color: var(--text-muted);
+  }
+  footer a { color: var(--accent-blue); text-decoration: none; }
+  footer a:hover { text-decoration: underline; }
+
+  @media (max-width: 560px) {
+    .grid-2 { grid-template-columns: 1fr; }
+    h1 { font-size: 26px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header>
+    <div class="badge">Fraud Detection Project</div>
+    <h1>Credit card fraud risk simulator</h1>
+    <p class="lead">Enter a transaction below to see a simulated risk score, based on the patterns my Random Forest model learned from 284,807 real credit card transactions.</p>
+    <div class="disclaimer">
+      <b>How this works:</b> My actual model was trained in Python (scikit-learn) on 28 anonymized features that have no real-world meaning outside that dataset. This demo runs a simplified scoring rule in your browser that mimics the same fraud signals — it is not the literal trained model, but it reflects the real patterns the project uncovered.
+    </div>
+  </header>
+
+  <div class="card">
+    <h2>Transaction details</h2>
+
+    <div class="grid-2">
+      <div>
+        <label for="amount">Transaction amount ($)</label>
+        <input type="number" id="amount" value="84.50" min="0" max="25000" step="0.01">
+      </div>
+      <div>
+        <label for="timeofday">Time of day</label>
+        <select id="timeofday">
+          <option value="9">Morning (6am – 12pm)</option>
+          <option value="14">Afternoon (12pm – 6pm)</option>
+          <option value="19">Evening (6pm – 11pm)</option>
+          <option value="2" selected>Late night (11pm – 6am)</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="grid-2">
+      <div>
+        <label for="velocity">Transactions in last hour</label>
+        <input type="range" id="velocity" min="1" max="12" value="1" step="1">
+        <div class="range-out"><span id="velocity-out">1</span> transaction</div>
+      </div>
+      <div>
+        <label for="merchant">Merchant pattern</label>
+        <select id="merchant">
+          <option value="typical">Typical for this card</option>
+          <option value="new">New merchant, first time</option>
+          <option value="foreign">Foreign / unusual location</option>
+        </select>
+      </div>
+    </div>
+
+    <button id="check-btn">Check transaction</button>
+
+    <div id="result">
+      <div class="result-top">
+        <div>
+          <div class="score-label">Risk score</div>
+          <div class="score-value" id="score-value">0%</div>
+        </div>
+        <div class="verdict" id="verdict-badge"></div>
+      </div>
+      <div class="bar-track"><div class="bar-fill" id="score-bar"></div></div>
+      <div id="signal-list"></div>
+    </div>
+  </div>
+
+  <div class="stats-row">
+    <div class="stat">Precision <b>96.1%</b></div>
+    <div class="stat">Recall <b>75.5%</b></div>
+    <div class="stat">Trained on <b>284,807</b> transactions</div>
+  </div>
+
+  <footer>
+    Built by Mahidhar Gubbala &middot; <a href="https://github.com/mahidhargubbala-pixel/student-performance-analysis" target="_blank">View the full project on GitHub</a>
+  </footer>
+</div>
+
+<script>
+  const velocitySlider = document.getElementById('velocity');
+  const velocityOut = document.getElementById('velocity-out');
+  velocitySlider.addEventListener('input', () => {
+    const v = velocitySlider.value;
+    velocityOut.textContent = v + (v === '1' ? ' transaction' : ' transactions');
+  });
+
+  document.getElementById('check-btn').addEventListener('click', () => {
+    const amount = parseFloat(document.getElementById('amount').value) || 0;
+    const hour = parseInt(document.getElementById('timeofday').value);
+    const velocity = parseInt(velocitySlider.value);
+    const merchant = document.getElementById('merchant').value;
+
+    let score = 6;
+    const signals = [];
+
+    if (amount < 5) {
+      score += 22;
+      signals.push({ text: 'Very small amount — common in card-testing fraud', dir: 'up' });
+    } else if (amount > 2000) {
+      score += 18;
+      signals.push({ text: 'Unusually large amount for a single transaction', dir: 'up' });
+    } else if (amount > 15 && amount < 400) {
+      signals.push({ text: 'Typical amount range for everyday spending', dir: 'down' });
+    }
+
+    if (hour === 2) {
+      score += 20;
+      signals.push({ text: 'Late-night transaction, outside usual hours', dir: 'up' });
+    } else {
+      signals.push({ text: 'Transaction during normal waking hours', dir: 'down' });
+    }
+
+    if (velocity >= 6) {
+      score += 30;
+      signals.push({ text: velocity + ' transactions in the last hour — high velocity', dir: 'up' });
+    } else if (velocity >= 3) {
+      score += 12;
+      signals.push({ text: velocity + ' transactions in the last hour — above average', dir: 'up' });
+    } else {
+      signals.push({ text: 'Normal transaction frequency', dir: 'down' });
+    }
+
+    if (merchant === 'foreign') {
+      score += 24;
+      signals.push({ text: 'Foreign or unusual merchant location', dir: 'up' });
+    } else if (merchant === 'new') {
+      score += 10;
+      signals.push({ text: 'First-time merchant for this card', dir: 'up' });
+    } else {
+      signals.push({ text: "Merchant matches this card's usual pattern", dir: 'down' });
+    }
+
+    score = Math.min(98, Math.max(2, Math.round(score)));
+
+    const result = document.getElementById('result');
+    const scoreValue = document.getElementById('score-value');
+    const scoreBar = document.getElementById('score-bar');
+    const verdictBadge = document.getElementById('verdict-badge');
+    const signalList = document.getElementById('signal-list');
+
+    result.style.display = 'block';
+    scoreValue.textContent = score + '%';
+
+    let barColor, badgeBg, badgeColor, label;
+    if (score < 30) {
+      barColor = '#22c55e'; badgeBg = 'rgba(34,197,94,0.12)'; badgeColor = '#4ade80'; label = 'Likely legitimate';
+    } else if (score < 65) {
+      barColor = '#f59e0b'; badgeBg = 'rgba(245,158,11,0.12)'; badgeColor = '#fbbf24'; label = 'Needs review';
+    } else {
+      barColor = '#ef4444'; badgeBg = 'rgba(239,68,68,0.12)'; badgeColor = '#f87171'; label = 'Flagged as high risk';
+    }
+
+    scoreValue.style.color = barColor;
+    scoreBar.style.background = barColor;
+    scoreBar.style.width = score + '%';
+    verdictBadge.style.background = badgeBg;
+    verdictBadge.style.color = badgeColor;
+    verdictBadge.textContent = label;
+
+    signalList.innerHTML = '';
+    signals.forEach(s => {
+      const row = document.createElement('div');
+      row.className = 'signal';
+      const icon = document.createElement('span');
+      icon.className = 'signal-icon ' + s.dir;
+      icon.textContent = s.dir === 'up' ? '▲' : '▼';
+      const text = document.createElement('span');
+      text.textContent = s.text;
+      row.appendChild(icon);
+      row.appendChild(text);
+      signalList.appendChild(row);
+    });
+  });
+</script>
+
+</body>
+</html>
